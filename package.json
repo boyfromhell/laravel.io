@@ -2,7 +2,8 @@
     "private": true,
     "scripts": {
         "dev": "vite",
-        "build": "vite build"
+        "build": "vite build",
+        "heroku-postbuild": "npm run build"
     },
     "devDependencies": {
         "@tailwindcss/aspect-ratio": "^0.2.0",
