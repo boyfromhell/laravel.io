@@ -16,9 +16,17 @@ use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Request;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Horizon\Horizon;
+use Illuminate\Support\Facades\Schema;
 
 class AppServiceProvider extends ServiceProvider
 {
+
+    public function register()
+    {
+        //add this
+        Schema::defaultStringLength(191);
+    }
+
     public function boot()
     {
         $this->bootEloquentMorphs();
