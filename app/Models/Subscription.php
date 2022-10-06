@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Concerns\HasUuid;
+use App\Contracts\SubscriptionAble;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,9 +15,19 @@ final class Subscription extends Model
     use HasUuid;
 
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      */
     protected $table = 'subscriptions';
+
+    public function getKeyName()
+    {
+        return 'uuid';
+    }
+
+    public function getIncrementing()
+    {
+        return false;
+    }
 
     public function user(): User
     {

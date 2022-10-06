@@ -21,13 +21,17 @@ We'd like to thank these **amazing companies** for sponsoring us. If you are int
 
 - **[LaraJobs](https://larajobs.com)**
 - **[Cloudways](https://www.cloudways.com/en/?id=972670)**
+- **[LoadForge](https://loadforge.com/)**
 - [Forge](https://forge.laravel.com)
 - [Envoyer](https://envoyer.io)
 - [Fathom](https://usefathom.com)
-- [Blackfire.io](https://blackfire.io)
 - [Tinkerwell](https://tinkerwell.app)
 - [Akaunting](https://akaunting.com/developers?utm_source=Laravelio&utm_medium=Banner&utm_campaign=Developers)
 - [Scout APM](https://ter.li/o1adaj)
+- [Skynet Technologies](https://www.skynettechnologies.com/hire-laravel-developer)
+- [Lightflows](https://www.lightflows.co.uk/laravel-development-agency/)
+- [Backpack for Laravel](https://backpackforlaravel.com/?ref=laravelio)
+- [Devrims](https://devrims.com/)
 
 ## Requirements
 
@@ -50,7 +54,7 @@ The following tools are required in order to start the installation.
 6. Run `valet link` to link the site to a testing web address
 7. Configure the (optional) features from below
 
-You can now visit the app in your browser by visiting [http://laravel.io.test](http://laravel.io.test). If you seeded the database you can login into a test account with **`johndoe`** & **`password`**.
+You can now visit the app in your browser by visiting [http://laravel.io.test](http://laravel.io.test). If you seeded the database you can login into a test account with **`testing`** & **`password`**.
 
 ### Github Authentication (optional)
 
@@ -73,9 +77,9 @@ SCOUT_QUEUE=true
 ALGOLIA_APP_ID=
 ALGOLIA_SECRET="Use the Write API Key"
 
-MIX_ALGOLIA_APP_ID="${ALGOLIA_APP_ID}"
-MIX_ALGOLIA_SECRET="Use the Search API Key"
-MIX_ALGOLIA_INDEX=threads
+VITE_ALGOLIA_APP_ID="${ALGOLIA_APP_ID}"
+VITE_ALGOLIA_SECRET="Use the Search API Key"
+VITE_ALGOLIA_INDEX=threads
 ```
 
 In order to index your existing threads, run the following command:
@@ -103,13 +107,31 @@ TWITTER_ACCESS_SECRET=
 
 Approved articles are shared in the order they were submitted for approval. Articles are shared twice per day at 14:00 and 18:00 UTC. Once an article has been shared, it will not be shared again.
 
+### Telegram Notifications (optional)
+
+Laravel.io can notify maintainers of newly submitted articles through Telegram. For this to work, you'll need to [set up a Telegram bot](https://core.telegram.org/bots) and obtain a token. Then, configure the channel you want to send new article messages to.
+
+```
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_CHANNEL=
+```
+
+### Fathom Analytics (optional)
+
+To enable view counts on articles, you'll need to register a [Fathom Analytics](https://app.usefathom.com/register) account and [install](https://usefathom.com/docs/start/install) it on the site. You will then need to create an API token and find your site ID before updating the below environment variables in your `.env` file.
+
+```
+FATHOM_SITE_ID=
+FATHOM_TOKEN=
+```
+
 ## Commands
 
 Command | Description
 --- | ---
-**`php artisan test --parallel`** | Run the tests
+**`vendor/bin/pest -p`** | Run the tests with parallel execution
 `php artisan migrate:fresh --seed` | Reset the database
-`npm run watch` | Watch for changes in CSS and JS files
+`npm run dev` | Build and watch for changes in CSS and JS files
 
 ## Maintainers
 

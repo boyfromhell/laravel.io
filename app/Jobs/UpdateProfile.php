@@ -15,7 +15,9 @@ final class UpdateProfile
         private User $user,
         array $attributes = []
     ) {
-        $this->attributes = Arr::only($attributes, ['name', 'email', 'username', 'github_username', 'bio', 'twitter']);
+        $this->attributes = Arr::only($attributes, [
+            'name', 'email', 'username', 'github_username', 'bio', 'twitter', 'website',
+        ]);
     }
 
     public static function fromRequest(User $user, UpdateProfileRequest $request): self
@@ -26,10 +28,11 @@ final class UpdateProfile
             'username' => strtolower($request->username()),
             'bio' => trim(strip_tags($request->bio())),
             'twitter' => $request->twitter(),
+            'website' => $request->website(),
         ]);
     }
 
-    public function handle(): User
+    public function handle(): void
     {
         $emailAddress = $this->user->emailAddress();
 
@@ -41,7 +44,5 @@ final class UpdateProfile
 
             event(new EmailAddressWasChanged($this->user));
         }
-
-        return $this->user;
     }
 }

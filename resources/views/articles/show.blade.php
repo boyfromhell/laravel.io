@@ -6,15 +6,22 @@
 
 @section('content')
     <article class="bg-white">
-        @if ($article->isDeclined() && (Auth::user()->isAdmin() || Auth::user()->isModerator()))
-            <div class="w-full text-white bg-lio-500 p-4">
-                <div class="text-center container mx-auto px-4">
+        @auth
+            @if ($article->isDeclined() && (Auth::user()->isAdmin() || Auth::user()->isModerator()))
+                <x-info-banner>
                     {{ __('admin.articles.declined') }}
-                </div>
-            </div>
-        @endif
+                </x-info-banner>
+            @elseif ($article->isPublished() && $article->isAuthoredBy(Auth::user()))
+                <x-info-banner>
+                    Your article is now published and cannot be edited anymore. If you want to perform any changes to the article, please email <a href="mailto:hello@laravel.io">hello@laravel.io</a>
+                </x-info-banner>
+            @endif
+        @endauth
 
-        <div class="w-full bg-center bg-cover bg-gray-900" style="background-image: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.2)), url({{ $article->heroImage(2000, 384) }});">
+        <div
+            class="w-full bg-center {{ $article->hasHeroImage() ? 'bg-cover' : '' }} bg-gray-800"
+            style="background-image: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.2)), url({{ $article->heroImage(2000, 384) }});"
+        >
             <div class="container mx-auto">
                 <div class="px-4 lg:px-0 lg:mx-48">
                     <div class="flex items-center justify-between pt-6 mb-28">
@@ -39,9 +46,11 @@
                     @if (count($tags = $article->tags()))
                         <div class="flex flex-wrap gap-2 lg:gap-x-4 mb-4">
                             @foreach ($tags as $tag)
-                                <x-light-tag>
-                                    {{ $tag->name() }}
-                                </x-light-tag>
+                                <a href="{{ route('articles', ['tag' => $tag->slug()]) }}">
+                                    <x-light-tag :tag="$tag" class="hover:underline">
+                                        {{ $tag->name() }}
+                                    </x-light-tag>
+                                </a>
                             @endforeach
                         </div>
                     @endif
@@ -59,14 +68,20 @@
                             </a>
                         </div>
 
-                        <div class="flex items-center">
-                            <span class="font-mono text-sm mr-6 lg:mt-0">
+                        <div class="flex items-center gap-x-6">
+                            <span class="text-sm lg:mt-0">
                                 {{ $article->createdAt()->format('j M, Y') }}
                             </span>
 
                             <span class="text-sm">
                                 {{ $article->readTime() }} min read
                             </span>
+
+                            @unless($article->view_count < 10)
+                                <span class="text-sm">
+                                    {{ $article->viewCount() }} views
+                                </span>
+                            @endunless
                         </div>
                     </div>
                 </div>
@@ -139,6 +154,12 @@
                                 @if ($article->author()->hasTwitterAccount())
                                     <a href="https://twitter.com/{{ $article->author()->twitter() }}" class="text-twitter">
                                         <x-icon-twitter class="w-6 h-6" />
+                                    </a>
+                                @endif
+
+                                @if ($article->author()->hasWebsite())
+                                    <a href="{{ $article->author()->website() }}">
+                                        <x-heroicon-o-globe-alt class="w-6 h-6" />
                                     </a>
                                 @endif
                             </div>

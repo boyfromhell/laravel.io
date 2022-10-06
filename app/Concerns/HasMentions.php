@@ -2,7 +2,7 @@
 
 namespace App\Concerns;
 
-use App\Models\ReplyAble;
+use App\Contracts\ReplyAble;
 use App\Models\User;
 use Illuminate\Support\Collection;
 
@@ -17,7 +17,7 @@ trait HasMentions
         return $this->replyAble();
     }
 
-    public function getMentionedUsers(): Collection
+    public function mentionedUsers(): Collection
     {
         preg_match_all('/@([a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}(?!\w))/', $this->body(), $matches);
 

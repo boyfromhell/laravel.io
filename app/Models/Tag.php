@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Concerns\HasSlug;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
@@ -13,12 +14,12 @@ final class Tag extends Model
     use HasSlug;
 
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      */
     protected $table = 'tags';
 
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      */
     public $timestamps = false;
 
@@ -40,5 +41,15 @@ final class Tag extends Model
     public function articles(): MorphToMany
     {
         return $this->morphedByMany(Article::class, 'taggable');
+    }
+
+    public function scopePublic(Builder $query): Builder
+    {
+        return $query->where('slug', '!=', 'laravelio');
+    }
+
+    public function isAnnouncement(): bool
+    {
+        return $this->slug === 'laravelio';
     }
 }

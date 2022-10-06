@@ -14,21 +14,22 @@
 @endsection
 
 @section('content')
-    <main class="max-w-4xl mx-auto pt-10 pb-12 px-4 lg:pb-16">        
+    <main class="max-w-4xl mx-auto pt-10 pb-12 px-4 lg:pb-16">
         <div class="lg:grid lg:gap-x-5">
             <div class="sm:px-6 lg:px-0 lg:col-span-9">
-                <x-threads.form 
+                <x-threads.form
                     :route="['threads.update', $thread->slug()]"
-                    method="PUT" 
-                    :thread="$thread" 
+                    method="PUT"
+                    :thread="$thread"
                     :tags="$tags"
                     :selectedTags="$selectedTags"
                  />
 
                 <x-forms.info>
-                    Please search for your question before posting your thread by using the search box in the navigation bar.
+                    Please search for your question before posting your thread by using the search box in the navigation bar.<br>
+                    Want to share large code snippets? Share them through our <a href="https://paste.laravel.io" class="text-lio-700 underline">pastebin</a>.
                 </x-forms.info>
             </div>
         </div>
-    </div>
+    </main>
 @endsection

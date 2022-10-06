@@ -1,6 +1,6 @@
 @import 'tailwindcss/base';
 
-@import '~highlight.js/styles/hybrid.css';
+@import 'highlight.js/styles/hybrid.css';
 
 @import 'tailwindcss/components';
 
@@ -13,6 +13,8 @@
 @import 'replies.css';
 @import 'tables.css';
 @import 'tags.css';
+
+@import url('https://rsms.me/inter/inter.css');
 
 .number-block {
     box-shadow: 20px 0 40px 5px #e6f6f3 inset, -20px 0 10px 5px #e6f6f3 inset;

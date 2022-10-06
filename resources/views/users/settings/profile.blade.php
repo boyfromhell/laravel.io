@@ -79,7 +79,13 @@
                     </div>
 
                     <div class="col-span-12 sm:col-span-6">
-                        <x-forms.label for="twitter">Twitter handle</x-label>
+                        <x-forms.label for="website">Website</x-forms.label>
+
+                        <x-forms.inputs.input name="website" :value="Auth::user()->website()" prefix-icon="heroicon-o-globe-alt" />
+                    </div>
+
+                    <div class="col-span-12 sm:col-span-6">
+                        <x-forms.label for="twitter">Twitter handle</x-forms.label>
 
                         <x-forms.inputs.input name="twitter" :value="Auth::user()->twitter()" prefix-icon="heroicon-o-at-symbol" class="nav-search" />
 
@@ -98,5 +104,5 @@
                 </span>
             </div>
         </div>
-    </x-form>
+    </x-buk-form>
 </section>

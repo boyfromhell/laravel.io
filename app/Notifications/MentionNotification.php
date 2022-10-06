@@ -2,8 +2,8 @@
 
 namespace App\Notifications;
 
+use App\Contracts\MentionAble;
 use App\Mail\MentionEmail;
-use App\Models\MentionAble;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -14,9 +14,8 @@ final class MentionNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    public function __construct(
-        public MentionAble $mentionAble,
-    ) {
+    public function __construct(public MentionAble $mentionAble)
+    {
     }
 
     public function via(User $user)

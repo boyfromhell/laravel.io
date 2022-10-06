@@ -29,7 +29,7 @@
 
                             <div class="shrink-0">
                                 <x-buttons.secondary-button class="flex items-center gap-x-2" @click="activeModal = 'tag-filter'">
-                                    <x-heroicon-o-filter class="w-5 h-5" />
+                                    <x-heroicon-o-funnel class="w-5 h-5" />
                                     Tag filter
                                 </x-buttons.secondary-button>
                             </div>
@@ -43,7 +43,7 @@
                                 <span class="flex items-center gap-x-1">
                                     {{ $activeTag->name() }}
                                     <a href="{{ route('forum') }}">
-                                        <x-heroicon-o-x class="w-5 h-5" />
+                                        <x-heroicon-o-x-mark class="w-5 h-5" />
                                     </a>
                                 </span>
                             </x-tag>
@@ -65,7 +65,7 @@
                         <div class="w-1/2">
                             <x-buttons.secondary-cta class="w-full" @click="activeModal = 'tag-filter'">
                                 <span class="flex items-center gap-x-2">
-                                    <x-heroicon-o-filter class="w-5 h-5" />
+                                    <x-heroicon-o-funnel class="w-5 h-5" />
                                     Tag filter
                                 </span>
                             </x-buttons.secondary-cta>
@@ -89,7 +89,7 @@
                                 <span class="flex items-center gap-x-1">
                                     {{ $activeTag->name() }}
                                     <a href="{{ route('forum') }}">
-                                        <x-heroicon-o-x class="w-5 h-5" />
+                                        <x-heroicon-o-x-mark class="w-5 h-5" />
                                     </a>
                                 </span>
                             </x-tag>
@@ -155,7 +155,7 @@
                     </ul>
 
                     <p class="px-5 pt-3 pb-5 text-center text-xs text-gray-700">
-                        Solutions given in the past year.
+                        Solutions given in the past year. Excluding solutions from thread authors.
                     </p>
                 </div>
 
@@ -164,7 +164,7 @@
                 </div>
 
                 <div class="hidden lg:block mt-6">
-                    <x-buttons.dark-cta class="w-full">
+                    <x-buttons.dark-cta class="w-full" href="{{ url('/forum/feed') }}">
                         <x-heroicon-s-rss class="w-6 h-6 mr-2" />
                         RSS Feed
                     </x-buttons.dark-cta>
@@ -174,7 +174,7 @@
     </div>
 
     <div class="modal" x-show="activeModal === 'tag-filter'" x-cloak>
-        <div class="w-full h-full p-8 lg:w-96 lg:h-3/4 overflow-y-scroll">
+        <div class="w-full h-full p-8 lg:w-96 lg:h-3/4">
             <x-tag-filter :activeTag="$activeTag ?? null" :tags="$tags" :filter="$filter" />
         </div>
     </div>

@@ -9,6 +9,7 @@ use App\Jobs\CreateThread;
 use App\Jobs\DeleteThread;
 use App\Jobs\LockThread;
 use App\Jobs\MarkThreadSolution;
+use App\Jobs\ReportSpam;
 use App\Jobs\SubscribeToSubscriptionAble;
 use App\Jobs\UnlockThread;
 use App\Jobs\UnmarkThreadSolution;
@@ -18,12 +19,14 @@ use App\Models\Reply;
 use App\Models\Tag;
 use App\Models\Thread;
 use App\Models\User;
+use App\Notifications\ThreadDeletedNotification;
 use App\Policies\ThreadPolicy;
 use Illuminate\Auth\Middleware\Authenticate;
 use Illuminate\Auth\Middleware\EnsureEmailIsVerified;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class ThreadsController extends Controller
 {
@@ -86,7 +89,9 @@ class ThreadsController extends Controller
 
     public function store(ThreadRequest $request)
     {
-        $thread = $this->dispatchNow(CreateThread::fromRequest($request));
+        $this->dispatchSync(CreateThread::fromRequest($request, $uuid = Str::uuid()));
+
+        $thread = Thread::findByUuidOrFail($uuid);
 
         $this->success('forum.threads.created');
 
@@ -96,6 +101,7 @@ class ThreadsController extends Controller
     public function edit(Thread $thread)
     {
         $this->authorize(ThreadPolicy::UPDATE, $thread);
+
         $selectedTags = $thread->tags()->pluck('id')->toArray();
 
         return view('forum.threads.edit', ['thread' => $thread, 'tags' => Tag::all(), 'selectedTags' => $selectedTags]);
@@ -105,18 +111,24 @@ class ThreadsController extends Controller
     {
         $this->authorize(ThreadPolicy::UPDATE, $thread);
 
-        $thread = $this->dispatchNow(UpdateThread::fromRequest($thread, $request));
+        $this->dispatchSync(UpdateThread::fromRequest($thread, $request));
 
         $this->success('forum.threads.updated');
 
-        return redirect()->route('thread', $thread->slug());
+        return redirect()->route('thread', $thread->fresh()->slug());
     }
 
-    public function delete(Thread $thread)
+    public function delete(Request $request, Thread $thread)
     {
         $this->authorize(ThreadPolicy::DELETE, $thread);
 
-        $this->dispatchNow(new DeleteThread($thread));
+        $this->dispatchSync(new DeleteThread($thread));
+
+        $request->whenFilled('reason', function () use ($thread) {
+            $thread->author()?->notify(
+                new ThreadDeletedNotification($thread, request('reason')),
+            );
+        });
 
         $this->success('forum.threads.deleted');
 
@@ -128,11 +140,11 @@ class ThreadsController extends Controller
         $this->authorize(ThreadPolicy::LOCK, $thread);
 
         if ($thread->isLocked()) {
-            $this->dispatchNow(new UnlockThread($thread));
+            $this->dispatchSync(new UnlockThread($thread));
 
             $this->success('forum.threads.unlocked');
         } else {
-            $this->dispatchNow(new LockThread($request->user(), $thread));
+            $this->dispatchSync(new LockThread($request->user(), $thread));
 
             $this->success('forum.threads.locked');
         }
@@ -144,7 +156,7 @@ class ThreadsController extends Controller
     {
         $this->authorize(ThreadPolicy::UPDATE, $thread);
 
-        $this->dispatchNow(new MarkThreadSolution($thread, $reply, Auth::user()));
+        $this->dispatchSync(new MarkThreadSolution($thread, $reply, Auth::user()));
 
         return redirect()->route('thread', $thread->slug());
     }
@@ -153,7 +165,7 @@ class ThreadsController extends Controller
     {
         $this->authorize(ThreadPolicy::UPDATE, $thread);
 
-        $this->dispatchNow(new UnmarkThreadSolution($thread));
+        $this->dispatchSync(new UnmarkThreadSolution($thread));
 
         return redirect()->route('thread', $thread->slug());
     }
@@ -162,7 +174,7 @@ class ThreadsController extends Controller
     {
         $this->authorize(ThreadPolicy::SUBSCRIBE, $thread);
 
-        $this->dispatchNow(new SubscribeToSubscriptionAble($request->user(), $thread));
+        $this->dispatchSync(new SubscribeToSubscriptionAble($request->user(), $thread));
 
         $this->success("You're now subscribed to this thread.");
 
@@ -173,9 +185,20 @@ class ThreadsController extends Controller
     {
         $this->authorize(ThreadPolicy::UNSUBSCRIBE, $thread);
 
-        $this->dispatchNow(new UnsubscribeFromSubscriptionAble($request->user(), $thread));
+        $this->dispatchSync(new UnsubscribeFromSubscriptionAble($request->user(), $thread));
 
         $this->success("You're now unsubscribed from this thread.");
+
+        return redirect()->route('thread', $thread->slug());
+    }
+
+    public function markAsSpam(Request $request, Thread $thread)
+    {
+        $this->authorize(ThreadPolicy::REPORT_SPAM, $thread);
+
+        $this->dispatchSync(new ReportSpam($request->user(), $thread));
+
+        $this->success("We've received your spam report. Thanks for helping us keep the forum clean!");
 
         return redirect()->route('thread', $thread->slug());
     }

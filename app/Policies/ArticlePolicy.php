@@ -8,15 +8,22 @@ use App\Models\User;
 final class ArticlePolicy
 {
     const UPDATE = 'update';
+
     const DELETE = 'delete';
+
     const APPROVE = 'approve';
+
     const DISAPPROVE = 'disapprove';
+
     const DECLINE = 'decline';
+
     const PINNED = 'togglePinnedStatus';
 
     public function update(User $user, Article $article): bool
     {
-        return $article->isAuthoredBy($user) || $user->isModerator() || $user->isAdmin();
+        return ($article->isAuthoredBy($user) && $article->isNotPublished()) ||
+            $user->isModerator() ||
+            $user->isAdmin();
     }
 
     public function delete(User $user, Article $article): bool

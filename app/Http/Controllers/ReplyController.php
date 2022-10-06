@@ -2,18 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Contracts\ReplyAble;
 use App\Http\Requests\CreateReplyRequest;
-use App\Http\Requests\UpdateReplyRequest;
 use App\Jobs\CreateReply;
 use App\Jobs\DeleteReply;
-use App\Jobs\UpdateReply;
+use App\Jobs\ReportSpam;
 use App\Models\Reply;
-use App\Models\ReplyAble;
 use App\Models\Thread;
 use App\Policies\ReplyPolicy;
 use Illuminate\Auth\Middleware\Authenticate;
 use Illuminate\Auth\Middleware\EnsureEmailIsVerified;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class ReplyController extends Controller
 {
@@ -26,38 +27,33 @@ class ReplyController extends Controller
     {
         $this->authorize(ReplyPolicy::CREATE, Reply::class);
 
-        $reply = $this->dispatchNow(CreateReply::fromRequest($request));
+        $this->dispatchSync(CreateReply::fromRequest($request, $uuid = Str::uuid()));
+
+        $reply = Reply::findByUuidOrFail($uuid);
 
         $this->success('replies.created');
 
         return $this->redirectToReplyAble($reply->replyAble());
     }
 
-    public function edit(Reply $reply)
+    public function delete(Request $request, Reply $reply)
     {
-        $this->authorize(ReplyPolicy::UPDATE, $reply);
+        $this->authorize(ReplyPolicy::DELETE, $reply);
 
-        return view('replies.edit', compact('reply'));
-    }
+        $this->dispatchSync(new DeleteReply($reply, $request->delete_reason));
 
-    public function update(UpdateReplyRequest $request, Reply $reply)
-    {
-        $this->authorize(ReplyPolicy::UPDATE, $reply);
-
-        $this->dispatchNow(new UpdateReply($reply, $request->user(), $request->body()));
-
-        $this->success('replies.updated');
+        $this->success('replies.deleted');
 
         return $this->redirectToReplyAble($reply->replyAble());
     }
 
-    public function delete(Reply $reply)
+    public function markAsSpam(Request $request, Reply $reply)
     {
-        $this->authorize(ReplyPolicy::DELETE, $reply);
+        $this->authorize(ReplyPolicy::REPORT_SPAM, $reply);
 
-        $this->dispatchNow(new DeleteReply($reply));
+        $this->dispatchSync(new ReportSpam($request->user(), $reply));
 
-        $this->success('replies.deleted');
+        $this->success("We've received your spam report. Thanks for helping us keep the forum clean!");
 
         return $this->redirectToReplyAble($reply->replyAble());
     }

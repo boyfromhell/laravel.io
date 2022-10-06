@@ -15,33 +15,35 @@ final class Notifications extends Component
     use AuthorizesRequests;
     use WithPagination;
 
-    public $notificationId;
+    public $notificationCount = 0;
 
     public function render(): View
     {
+        $notifications = Auth::user()->unreadNotifications()->paginate(10);
+        $lastPage = count($notifications) == 0 ? $notifications->lastPage() : null;
+
         return view('livewire.notifications', [
-            'notifications' => Auth::user()->unreadNotifications()->paginate(10),
+            'notifications' => Auth::user()->unreadNotifications()->paginate(10, ['*'], 'page', $lastPage),
         ]);
     }
 
     public function mount(): void
     {
         abort_if(Auth::guest(), 403);
-    }
 
-    public function getNotificationProperty(): DatabaseNotification
-    {
-        return DatabaseNotification::findOrFail($this->notificationId);
+        $this->notificationCount = Auth::user()->unreadNotifications()->count();
     }
 
     public function markAsRead(string $notificationId): void
     {
-        $this->notificationId = $notificationId;
+        $notification = DatabaseNotification::findOrFail($notificationId);
 
-        $this->authorize(NotificationPolicy::MARK_AS_READ, $this->notification);
+        $this->authorize(NotificationPolicy::MARK_AS_READ, $notification);
 
-        $this->notification->markAsRead();
+        $notification->markAsRead();
 
-        $this->emit('NotificationMarkedAsRead', Auth::user()->unreadNotifications()->count());
+        $this->notificationCount--;
+
+        $this->emit('NotificationMarkedAsRead', $this->notificationCount);
     }
 }
