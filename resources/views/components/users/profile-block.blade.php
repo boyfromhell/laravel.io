@@ -1,7 +1,7 @@
 @props(['user'])
 
 <div class="flex flex-col rounded-md shadow mt-6">
-    <div class="bg-gray-900 rounded-t-md h-28" style="background-image: url('{{ asset('images/profile-background.svg') }}')"></div>
+    <div class="bg-gray-800 rounded-t-md h-28" style="background-image: url('{{ asset('images/default-background.svg') }}')"></div>
 
     <div class="flex flex-col items-center justify-center bg-white rounded-b-md pb-8">
         <x-avatar :user="$user" class="w-32 h-32 rounded-full -mt-16 mb-6" />
@@ -25,6 +25,12 @@
             @if ($user->hasTwitterAccount())
                 <a href="https://twitter.com/{{ $user->twitter() }}" class="text-twitter">
                     <x-icon-twitter class="w-6 h-6" />
+                </a>
+            @endif
+
+            @if ($user->hasWebsite())
+                <a href="{{ $user->website() }}">
+                    <x-heroicon-o-globe-alt class="w-6 h-6" />
                 </a>
             @endif
         </div>

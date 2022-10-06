@@ -22,17 +22,17 @@
         <div class="w-full lg:w-3/4">
             @auth
                 @if (! $thread->isSolved() && $thread->isAuthoredBy(Auth::user()))
-                    <x-primary-info-panel icon="heroicon-o-badge-check">
+                    <x-primary-info-panel icon="heroicon-o-check-badge">
                         Please make sure to mark the correct reply as the solution when your question gets answered.
                     </x-primary-info-panel>
                 @endif
             @endauth
 
             <div class="relative">
-                <div class="relative flex flex-col gap-y-6 z-20">
+                <div class="relative flex flex-col gap-y-4 z-20">
                     <x-threads.thread :thread="$thread" />
 
-                    @foreach ($thread->replies() as $reply)
+                    @foreach ($thread->repliesWithTrashed() as $reply)
                         <x-threads.reply :thread="$thread" :reply="$reply" />
                     @endforeach
                 </div>
@@ -67,7 +67,11 @@
                         </x-info-panel>
                     @else
                         <div class="my-8">
-                            <form action="{{ route('replies.store') }}" method="POST">
+                            <form
+                                action="{{ route('replies.store') }}"
+                                method="POST"
+                                @submitted="$event.currentTarget.submit()"
+                            >
                                 @csrf
 
                                 <livewire:editor
@@ -100,7 +104,7 @@
                         <a href="{{ route('login') }}" class="text-lio-500 border-b-2 pb-0.5 border-lio-100 hover:text-lio-600">Sign in</a> to participate in this thread!
                     </p>
                 @else
-                    <x-info-panel class="flex justify-between gap-x-16">
+                    <x-info-panel>
                         <p>You'll need to verify your account before participating in this thread.</p>
 
                         <form action="{{ route('verification.resend') }}" method="POST" class="block">

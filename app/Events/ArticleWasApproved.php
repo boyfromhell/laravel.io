@@ -9,8 +9,7 @@ final class ArticleWasApproved
 {
     use SerializesModels;
 
-    public function __construct(
-        public Article $article
-    ) {
+    public function __construct(public Article $article)
+    {
     }
 }

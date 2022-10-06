@@ -6,8 +6,8 @@
 @section('content')
     <section class="bg-white">
         <div
-            class="bg-gray-900 bg-contain h-60 w-full"
-            style="background-image: url('{{ asset('images/profile-background.svg') }}')"
+            class="w-full bg-center bg-gray-800 h-60"
+            style="background-image: url('{{ asset('images/default-background.svg') }}')"
         ></div>
 
         <div class="container mx-auto">
@@ -51,6 +51,12 @@
                                 <x-icon-twitter class="w-6 h-6" />
                             </a>
                         @endif
+
+                        @if ($user->hasWebsite())
+                            <a href="{{ $user->website() }}">
+                                <x-heroicon-o-globe-alt class="w-6 h-6" />
+                            </a>
+                        @endif
                     </div>
 
                     <div class="flex flex-col gap-y-4">
@@ -62,6 +68,24 @@
                                 </span>
                             </x-buttons.secondary-button>
                         @endif
+
+                        @can(App\Policies\UserPolicy::BLOCK, $user)
+                            @if (Auth::user()->hasBlocked($user))
+                                <x-buttons.secondary-button class="w-full" @click.prevent="activeModal = 'unblockUser'">
+                                    <span class="flex items-center gap-x-2">
+                                        <x-heroicon-o-check class="w-5 h-5" />
+                                        Unblock User
+                                    </span>
+                                </x-buttons.secondary-button>
+                            @else
+                                <x-buttons.danger-button class="w-full" @click.prevent="activeModal = 'blockUser'">
+                                    <span class="flex items-center gap-x-2">
+                                        <x-heroicon-o-x-mark class="w-5 h-5" />
+                                        Block User
+                                    </span>
+                                </x-buttons.danger-button>
+                            @endif
+                        @endcan
 
                         @can(App\Policies\UserPolicy::BAN, $user)
                             @if ($user->isBanned())
@@ -80,17 +104,6 @@
                                 </x-buttons.danger-button>
                             @endif
                         @endcan
-
-                        @if (Auth::check() && Auth::user()->isAdmin())
-                            @can(App\Policies\UserPolicy::DELETE, $user)
-                                <x-buttons.danger-button class="w-full" @click.prevent="activeModal = 'deleteUser'">
-                                    <span class="flex items-center gap-x-2">
-                                        <x-heroicon-o-trash class="w-5 h-5" />
-                                        Delete User
-                                    </span>
-                                </x-buttons.danger-button>
-                            @endcan
-                        @endif
                     </div>
                 </div>
 
@@ -174,6 +187,28 @@
         </div>
     </section>
 
+    @can(App\Policies\UserPolicy::BLOCK, $user)
+        @if (Auth::user()->hasBlocked($user))
+            <x-modal
+                identifier="unblockUser"
+                :action="route('users.unblock', $user->username())"
+                title="Unblock {{ $user->username() }}"
+                type="update"
+            >
+                <p>Unblocking this user will allow them to mention you again in threads and replies.</p>
+            </x-modal>
+        @else
+            <x-modal
+                identifier="blockUser"
+                :action="route('users.block', $user->username())"
+                title="Block {{ $user->username() }}"
+                type="update"
+            >
+                <p>Blocking this user will prevent them from mentioning you in threads and replies. The user will not be notified that you blocked them.</p>
+            </x-modal>
+        @endif
+    @endcan
+
     @can(App\Policies\UserPolicy::BAN, $user)
         @if ($user->isBanned())
             <x-modal
@@ -194,15 +229,5 @@
                 <p>Banning this user will prevent them from logging in, posting threads and replying to threads.</p>
             </x-modal>
         @endif
-    @endcan
-
-    @can(App\Policies\UserPolicy::DELETE, $user)
-        <x-modal
-            identifier="deleteUser"
-            :action="route('admin.users.delete', $user->username())"
-            title="Delete {{ $user->username() }}"
-        >
-            <p>Deleting this user will remove their account and any related content like threads & replies. This cannot be undone.</p>
-        </x-modal>
     @endcan
 @endsection

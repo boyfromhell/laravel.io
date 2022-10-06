@@ -3,7 +3,7 @@
     x-data="{ hovered: false }"
 >
     <div class="flex flex-col gap-x-4 gap-y-3 lg:flex-row">
-        @if (Auth::check() && $article->isAuthoredBy(Auth::user()))
+        @can(App\Policies\ArticlePolicy::UPDATE, $article)
             <x-buttons.secondary-button
                 href="{{ route('articles.edit', $article->slug()) }}"
                 @mouseover="hovered = 'edit'"
@@ -15,7 +15,7 @@
                     <span x-cloak x-show="hovered === 'edit'" class="leading-5">Edit article</span>
                 </span>
             </x-buttons.secondary-button>
-        @endif
+        @endcan
 
         @if ($article->isNotPublished() && $article->isAwaitingApproval())
             @can(App\Policies\ArticlePolicy::APPROVE, $article)
@@ -42,7 +42,7 @@
                     class="w-full"
                 >
                     <span class="flex items-center gap-x-2">
-                        <x-heroicon-s-x class="w-5 h-5" title="Decline"/>
+                        <x-heroicon-s-x-mark class="w-5 h-5" title="Decline"/>
                         <span x-cloak x-show="hovered === 'decline'" class="leading-5">Decline article</span>
                     </span>
                 </x-buttons.secondary-button>
@@ -57,7 +57,7 @@
                     class="w-full"
                 >
                     <span class="flex items-center gap-x-2">
-                        <x-heroicon-o-eye-off class="w-5 h-5" title="Unpublish"/>
+                        <x-heroicon-o-eye-slash class="w-5 h-5" title="Unpublish"/>
                         <span x-cloak x-show="hovered === 'unpublish'" class="leading-5">Unpublish article</span>
                     </span>
                 </x-buttons.secondary-button>

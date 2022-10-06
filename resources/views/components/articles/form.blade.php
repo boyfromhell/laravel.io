@@ -6,7 +6,10 @@
     'selectedTags' => []
 ])
 
-<x-buk-form action="{{ route(...$route) }}" :method="$method">
+<x-buk-form
+    action="{{ route(...$route) }}"
+    :method="$method"
+>
     <div class="bg-gray-100 py-6 px-4 space-y-6 sm:p-6">
         <div>
             <h2 id="create_thread_heading" class="text-lg leading-6 font-medium text-gray-900">
@@ -18,11 +21,11 @@
             </h2>
 
             <x-forms.info class="px-0">
-                Submit your article to the Laravel.io portal. Every article that gets approved will be shared with our 45.000 users and wil be tweeted out on our <a href="https://twitter.com/laravelio" class="text-lio-700 underline">Twitter account</a> which has over 45,000 followers. Feel free to submit as many articles as you like. You can even cross-reference an article on your blog with the original url.
+                Submit your article to the Laravel.io portal. Every article that gets approved will be shared with our 50.000 users and wil be tweeted out on our <a href="https://twitter.com/laravelio" class="text-lio-700 underline">Twitter account</a> which has over 45,000 followers. Feel free to submit as many articles as you like. You can even cross-reference an article on your blog with the original url.
             </x-forms.info>
 
             <x-forms.info class="px-0">
-                After submission for approval, articles are reviewed before being published. No notification of declined articles will be provided. Instead, we encourage to also cross-post articles on your own channel as well.
+                After submission for approval, articles are reviewed before being published. No notification of declined articles will be provided. Instead, we encourage to also cross-post articles on your own channel as well. <strong>After being published, you cannot edit your article anymore so please review it thoroughly before submitting for approval.</strong>
             </x-forms.info>
 
             <x-rules-banner />
@@ -69,8 +72,8 @@
                         <x-forms.label for="tags">Tags</x-forms.label>
 
                         <select name="tags[]" id="create-article" multiple x-data="{}" x-init="$nextTick(function () { choices($el) })">
-                            @foreach($tags as $tag)
-                                <option value="{{ $tag->id }}" @if(in_array($tag->id, $selectedTags)) selected @endif>{{ $tag->name }}</option>
+                            @foreach ($tags as $tag)
+                                <option value="{{ $tag->id }}" {{ in_array($tag->id, $selectedTags) ? 'selected' : '' }}>{{ $tag->name }}</option>
                             @endforeach
                         </select>
 
@@ -79,7 +82,11 @@
                 </div>
             </div>
 
-            <div class="flex items-center justify-end">
+            <div class="md:flex md:items-center md:justify-between">
+                <x-forms.info class="px-0">
+                    <span class="font-bold">Note: </span>
+                    You can't edit an article anymore after it's been published.
+                </x-forms.info>
 
                 <div class="flex justify-end items-center">
                     <a href="{{ isset($article) ? route('articles.show', $article->slug()) : route('user.articles') }}" class="text-lio-700 mr-4">
@@ -97,10 +104,10 @@
                         </button>
                     @else
                         <span class="relative z-0 inline-flex shadow-sm" x-data="{ showDropdown: false }" @click.outside="showDropdown = false">
-                            <button 
-                                type="submit" 
-                                name="submitted" 
-                                value="0" 
+                            <button
+                                type="submit"
+                                name="submitted"
+                                value="0"
                                 class="button button-primary button-dropdown-left relative inline-flex items-center focus:outline-none"
                             >
                                 Save draft

@@ -18,6 +18,7 @@ use Illuminate\Auth\Middleware\EnsureEmailIsVerified;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 
 class ArticlesController extends Controller
@@ -93,17 +94,25 @@ class ArticlesController extends Controller
         ]);
     }
 
-    public function create()
+    public function create(Request $request)
     {
+        $tags = Tag::query();
+
+        if (! $request->user()->isAdmin()) {
+            $tags = $tags->public();
+        }
+
         return view('articles.create', [
-            'tags' => Tag::all(),
+            'tags' => $tags->get(),
             'selectedTags' => old('tags', []),
         ]);
     }
 
     public function store(ArticleRequest $request)
     {
-        $article = $this->dispatchSync(CreateArticle::fromRequest($request));
+        $this->dispatchSync(CreateArticle::fromRequest($request, $uuid = Str::uuid()));
+
+        $article = Article::findByUuidOrFail($uuid);
 
         $this->success($request->shouldBeSubmitted() ? 'articles.submitted' : 'articles.created');
 
@@ -112,13 +121,19 @@ class ArticlesController extends Controller
             : redirect()->route('articles.show', $article->slug());
     }
 
-    public function edit(Article $article)
+    public function edit(Request $request, Article $article)
     {
         $this->authorize(ArticlePolicy::UPDATE, $article);
 
+        $tags = Tag::query();
+
+        if (! $request->user()->isAdmin()) {
+            $tags = $tags->public();
+        }
+
         return view('articles.edit', [
             'article' => $article,
-            'tags' => Tag::all(),
+            'tags' => $tags->get(),
             'selectedTags' => old('tags', $article->tags()->pluck('id')->toArray()),
         ]);
     }
@@ -129,7 +144,9 @@ class ArticlesController extends Controller
 
         $wasNotPreviouslySubmitted = $article->isNotSubmitted();
 
-        $article = $this->dispatchSync(UpdateArticle::fromRequest($article, $request));
+        $this->dispatchSync(UpdateArticle::fromRequest($article, $request));
+
+        $article = $article->fresh();
 
         if ($wasNotPreviouslySubmitted && $request->shouldBeSubmitted()) {
             $this->success('articles.submitted');

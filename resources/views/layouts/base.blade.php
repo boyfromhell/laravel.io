@@ -17,12 +17,7 @@
     <meta name="description" content="The Laravel portal for problem solving, knowledge sharing and community building." />
     <link rel="canonical" href="{{ $canonical ?? Request::url() }}" />
 
-    <!-- Scripts -->
-    <script src="{{ mix('js/app.js') }}" defer></script>
-
-    <!-- Styles -->
-    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
-    <link href="{{ mix('css/app.css') }}" rel="stylesheet">
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     @stack('meta')
 
@@ -38,7 +33,7 @@
     @livewireStyles
 </head>
 
-<body class="{{ $bodyClass ?? '' }} font-sans bg-white antialiased" x-data="{ activeModal: false }" @keyup.escape="activeModal = false">
+<body class="{{ $bodyClass ?? '' }} font-sans bg-white antialiased" :class="{ 'overflow-hidden': lockScroll }" x-data="{ lockScroll: false, activeModal: false }" @keyup.escape="activeModal = false">
 
 @include('layouts._ads._banner')
 @include('layouts._nav')

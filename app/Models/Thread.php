@@ -8,9 +8,14 @@ use App\Concerns\HasMentions;
 use App\Concerns\HasSlug;
 use App\Concerns\HasTags;
 use App\Concerns\HasTimestamps;
+use App\Concerns\HasUuid;
 use App\Concerns\PreparesSearch;
 use App\Concerns\ProvidesSubscriptions;
 use App\Concerns\ReceivesReplies;
+use App\Contracts\MentionAble;
+use App\Contracts\ReplyAble;
+use App\Contracts\Spam;
+use App\Contracts\SubscriptionAble;
 use App\Exceptions\CouldNotMarkReplyAsSolution;
 use Exception;
 use Illuminate\Contracts\Pagination\Paginator;
@@ -19,6 +24,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\DB;
@@ -27,7 +33,7 @@ use Laravel\Scout\Searchable;
 use Spatie\Feed\Feedable;
 use Spatie\Feed\FeedItem;
 
-final class Thread extends Model implements Feedable, ReplyAble, SubscriptionAble, MentionAble
+final class Thread extends Model implements Feedable, ReplyAble, SubscriptionAble, MentionAble, Spam
 {
     use HasAuthor;
     use HasFactory;
@@ -36,6 +42,7 @@ final class Thread extends Model implements Feedable, ReplyAble, SubscriptionAbl
     use HasSlug;
     use HasTags;
     use HasTimestamps;
+    use HasUuid;
     use PreparesSearch;
     use ProvidesSubscriptions;
     use ReceivesReplies;
@@ -46,14 +53,15 @@ final class Thread extends Model implements Feedable, ReplyAble, SubscriptionAbl
     const FEED_PAGE_SIZE = 20;
 
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      */
     protected $table = self::TABLE;
 
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      */
     protected $fillable = [
+        'uuid',
         'body',
         'slug',
         'subject',
@@ -62,7 +70,7 @@ final class Thread extends Model implements Feedable, ReplyAble, SubscriptionAbl
     ];
 
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      */
     protected $with = [
         'authorRelation',
@@ -73,7 +81,7 @@ final class Thread extends Model implements Feedable, ReplyAble, SubscriptionAbl
     ];
 
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      */
     protected $casts = [
         'last_activity_at' => 'datetime',
@@ -113,6 +121,22 @@ final class Thread extends Model implements Feedable, ReplyAble, SubscriptionAbl
     public function isUpdated(): bool
     {
         return $this->updated_at->gt($this->created_at);
+    }
+
+    public function spamReporters(): Collection
+    {
+        return $this->spamReportersRelation;
+    }
+
+    public function spamReportersRelation(): MorphToMany
+    {
+        return $this->morphToMany(
+            User::class,
+            'spam',
+            'spam_reports',
+            null,
+            'reporter_id',
+        )->withTimestamps();
     }
 
     public function solutionReply(): ?Reply
@@ -221,7 +245,7 @@ final class Thread extends Model implements Feedable, ReplyAble, SubscriptionAbl
             ->summary($this->body)
             ->updated($updatedAt)
             ->link(route('thread', $this->slug))
-            ->author($this->author()->name);
+            ->authorName($this->author()->name);
     }
 
     /**

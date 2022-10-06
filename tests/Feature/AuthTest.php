@@ -2,18 +2,18 @@
 
 use App\Models\User;
 use Carbon\Carbon;
-use Illuminate\Auth\Events\Registered;
+use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Contracts\Auth\PasswordBroker;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Notification;
 use Tests\Feature\BrowserKitTestCase;
 
 uses(BrowserKitTestCase::class);
 uses(DatabaseMigrations::class);
 
 test('users can register', function () {
-    Event::fake();
+    Notification::fake();
 
     session(['githubData' => ['id' => 123, 'username' => 'johndoe']]);
 
@@ -29,7 +29,9 @@ test('users can register', function () {
 
     assertLoggedIn();
 
-    Event::assertDispatched(Registered::class);
+    $this->assertSessionMissing('githubData');
+
+    Notification::assertSentTo(Auth::user(), VerifyEmail::class);
 });
 
 test('registration fails when a required field is not filled in', function () {
@@ -91,11 +93,22 @@ test('users do not need to verify their email address twice', function () {
         ->seePageIs('/user/johndoe');
 });
 
-test('users can login', function () {
+test('users can login with their username', function () {
     $this->createUser();
 
     $this->visit('/login')
         ->type('johndoe', 'username')
+        ->type('password', 'password')
+        ->press('Sign in')
+        ->seePageIs('/user/johndoe')
+        ->see('John Doe');
+});
+
+test('users can login with their email address', function () {
+    $this->createUser();
+
+    $this->visit('/login')
+        ->type('john@example.com', 'username')
         ->type('password', 'password')
         ->press('Sign in')
         ->seePageIs('/user/johndoe')

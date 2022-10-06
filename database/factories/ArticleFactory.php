@@ -12,10 +12,12 @@ class ArticleFactory extends Factory
     public function definition(): array
     {
         return [
+            'uuid' => $this->faker->uuid(),
             'author_id' => User::factory(),
-            'title' => $this->faker->sentence,
+            'title' => $this->faker->sentence(),
             'body' => $this->faker->paragraphs(3, true),
-            'slug' => $this->faker->unique()->slug,
+            'slug' => $this->faker->unique()->slug(),
+            'view_count' => $this->faker->numberBetween(0, 1000),
         ];
     }
 

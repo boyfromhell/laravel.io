@@ -6,6 +6,7 @@ use App\Concerns\HasTimestamps;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -22,21 +23,24 @@ final class User extends Authenticatable implements MustVerifyEmail
     const TABLE = 'users';
 
     const DEFAULT = 1;
+
     const MODERATOR = 2;
+
     const ADMIN = 3;
 
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      */
     protected $table = 'users';
 
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      */
     protected $fillable = [
         'name',
         'email',
         'twitter',
+        'website',
         'username',
         'password',
         'ip',
@@ -48,7 +52,7 @@ final class User extends Authenticatable implements MustVerifyEmail
     ];
 
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      */
     protected $hidden = ['password', 'remember_token'];
 
@@ -87,9 +91,19 @@ final class User extends Authenticatable implements MustVerifyEmail
         return $this->twitter;
     }
 
+    public function website(): ?string
+    {
+        return $this->website;
+    }
+
     public function hasTwitterAccount(): bool
     {
         return ! empty($this->twitter());
+    }
+
+    public function hasWebsite(): bool
+    {
+        return ! empty($this->website());
     }
 
     public function isBanned(): bool
@@ -194,6 +208,11 @@ final class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(Reply::class, 'author_id');
     }
 
+    public function blockedUsers(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'blocked_users', 'user_id', 'blocked_user_id');
+    }
+
     public function articles(): HasMany
     {
         return $this->hasMany(Article::class, 'author_id');
@@ -241,7 +260,10 @@ final class User extends Authenticatable implements MustVerifyEmail
     {
         return $query->withCount(['replyAble as solutions_count' => function ($query) use ($inLastDays) {
             $query->where('replyable_type', 'threads')
-                ->join('threads', 'threads.solution_reply_id', '=', 'replies.id');
+                ->join('threads', function ($join) {
+                    $join->on('threads.solution_reply_id', '=', 'replies.id')
+                        ->on('threads.author_id', '!=', 'replies.author_id');
+                });
 
             if ($inLastDays) {
                 $query->where('replies.created_at', '>', now()->subDays($inLastDays));
@@ -298,5 +320,29 @@ final class User extends Authenticatable implements MustVerifyEmail
             self::ADMIN,
             self::MODERATOR,
         ]);
+    }
+
+    public function hasBlocked(User $user): bool
+    {
+        return $this->blockedUsers()->where('blocked_user_id', $user->getKey())->exists();
+    }
+
+    public function hasUnblocked(User $user): bool
+    {
+        return ! $this->hasBlocked($user);
+    }
+
+    public function scopeWithUsersWhoDoesntBlock(Builder $query, User $user)
+    {
+        return $query->whereDoesntHave('blockedUsers', function ($query) use ($user) {
+            $query->where('blocked_user_id', $user->getKey());
+        });
+    }
+
+    public function scopeWithUsersWhoArentBlockedBy(Builder $query, User $user)
+    {
+        return $query->whereDoesntHave('blockedUsers', function ($query) use ($user) {
+            $query->where('user_id', $user->getKey());
+        });
     }
 }

@@ -9,7 +9,6 @@ use App\Jobs\UpdateProfile;
 use App\Policies\UserPolicy;
 use Illuminate\Auth\Middleware\Authenticate;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class ProfileController extends Controller
 {
@@ -25,7 +24,7 @@ class ProfileController extends Controller
 
     public function update(UpdateProfileRequest $request)
     {
-        $this->dispatchNow(UpdateProfile::fromRequest(Auth::user(), $request));
+        $this->dispatchSync(UpdateProfile::fromRequest($request->user(), $request));
 
         $this->success('settings.updated');
 
@@ -36,7 +35,7 @@ class ProfileController extends Controller
     {
         $this->authorize(UserPolicy::DELETE, $user = $request->user());
 
-        $this->dispatchNow(new DeleteUser($user));
+        $this->dispatchSync(new DeleteUser($user));
 
         $this->success('settings.deleted');
 

@@ -33,11 +33,11 @@ final class UpdateArticle
             [
                 'original_url' => $request->originalUrl(),
                 'tags' => $request->tags(),
-            ]
+            ],
         );
     }
 
-    public function handle(): Article
+    public function handle(): void
     {
         $this->article->update([
             'title' => $this->title,
@@ -54,8 +54,6 @@ final class UpdateArticle
         }
 
         $this->article->syncTags($this->tags);
-
-        return $this->article;
     }
 
     private function shouldUpdateSubmittedAt(): bool

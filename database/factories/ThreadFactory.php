@@ -12,9 +12,10 @@ class ThreadFactory extends Factory
     public function definition(): array
     {
         return [
+            'uuid' => $this->faker->uuid(),
             'subject' => $this->faker->text(20),
-            'body' => $this->faker->text,
-            'slug' => $this->faker->unique()->slug,
+            'body' => $this->faker->text(),
+            'slug' => $this->faker->unique()->slug(),
             'author_id' => $attributes['author_id'] ?? User::factory(),
             'created_at' => $this->faker->dateTimeBetween('-6 months'),
         ];

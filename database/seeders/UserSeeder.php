@@ -13,13 +13,22 @@ class UserSeeder extends Seeder
 {
     public function run()
     {
-        User::factory()->createQuietly([
-            'name' => 'John Doe',
-            'email' => 'john@example.com',
-            'username' => 'johndoe',
+        $admin = User::factory()->createQuietly([
+            'name' => 'Test User',
+            'email' => 'test@example.com',
+            'username' => 'testing',
             'github_username' => 'driesvints',
             'password' => bcrypt('password'),
             'type' => User::ADMIN,
+        ]);
+
+        User::factory()->createQuietly([
+            'name' => 'Jane Doe',
+            'email' => 'jane@example.com',
+            'username' => 'janedoe',
+            'github_username' => 'janedoe',
+            'password' => bcrypt('password'),
+            'type' => User::DEFAULT,
         ]);
 
         DB::beginTransaction();
@@ -44,11 +53,16 @@ class UserSeeder extends Seeder
             )
             ->createQuietly();
 
+        Article::factory()->count(10)->createQuietly(['author_id' => $admin->id]);
+
         DB::commit();
 
         Article::published()
             ->inRandomOrder()
             ->take(4)
             ->update(['is_pinned' => true]);
+
+        // Block some users...
+        $admin->blockedUsers()->sync(range(20, 24));
     }
 }

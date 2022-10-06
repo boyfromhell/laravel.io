@@ -7,15 +7,19 @@ use App\Concerns\HasLikes;
 use App\Concerns\HasSlug;
 use App\Concerns\HasTags;
 use App\Concerns\HasTimestamps;
+use App\Concerns\HasUuid;
 use App\Concerns\PreparesSearch;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Laravel\Scout\Searchable;
+use Spatie\Feed\Feedable;
+use Spatie\Feed\FeedItem;
 
-final class Article extends Model
+final class Article extends Model implements Feedable
 {
     use HasFactory;
     use HasAuthor;
@@ -23,21 +27,26 @@ final class Article extends Model
     use HasLikes;
     use HasTimestamps;
     use HasTags;
+    use HasUuid;
     use PreparesSearch;
     use Searchable;
 
     const TABLE = 'articles';
 
+    const FEED_PAGE_SIZE = 20;
+
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      */
     protected $fillable = [
+        'uuid',
         'title',
         'body',
         'original_url',
         'slug',
         'hero_image',
         'is_pinned',
+        'view_count',
         'tweet_id',
         'submitted_at',
         'approved_at',
@@ -46,16 +55,16 @@ final class Article extends Model
     ];
 
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      */
-    protected $dates = [
-        'submitted_at',
-        'approved_at',
-        'shared_at',
+    protected $casts = [
+        'submitted_at' => 'datetime',
+        'approved_at' => 'datetime',
+        'shared_at' => 'datetime',
     ];
 
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      */
     protected $with = [
         'authorRelation',
@@ -81,6 +90,11 @@ final class Article extends Model
     public function excerpt(int $limit = 100): string
     {
         return Str::limit(strip_tags(md_to_html($this->body())), $limit);
+    }
+
+    public function hasHeroImage(): bool
+    {
+        return $this->hero_image !== null;
     }
 
     public function heroImage($width = 400, $height = 300): string
@@ -184,6 +198,11 @@ final class Article extends Model
         return $minutes == 0 ? 1 : $minutes;
     }
 
+    public function viewCount()
+    {
+        return number_format($this->view_count);
+    }
+
     public function isUpdated(): bool
     {
         return $this->updated_at->gt($this->created_at);
@@ -265,8 +284,7 @@ final class Article extends Model
 
     public function scopeRecent(Builder $query): Builder
     {
-        return $query->orderBy('is_pinned', 'desc')
-            ->orderBy('submitted_at', 'desc');
+        return $query->orderBy('submitted_at', 'desc');
     }
 
     public function scopePopular(Builder $query): Builder
@@ -318,5 +336,24 @@ final class Article extends Model
             ->published()
             ->orderBy('submitted_at', 'asc')
             ->first();
+    }
+
+    public static function getFeedItems(): Collection
+    {
+        return self::published()
+            ->recent()
+            ->paginate(self::FEED_PAGE_SIZE)
+            ->getCollection();
+    }
+
+    public function toFeedItem(): FeedItem
+    {
+        return FeedItem::create()
+            ->id($this->id())
+            ->title($this->title())
+            ->summary($this->excerpt())
+            ->updated($this->updatedAt())
+            ->link(route('articles.show', $this->slug()))
+            ->authorName($this->author()->name());
     }
 }
