@@ -2,12 +2,13 @@
     "private": true,
 
     "engines": {
-    "node": "16.x"
+    "node": "16.x",
+    "npm": "8.15.X"
     },
     "scripts": {
         "dev": "vite",
         "build": "vite build",
-        "heroku-postbuild": "npm install && npm run build"
+        "heroku-postbuild": "npm run build"
     },
     "dependencies": {
         "@tailwindcss/aspect-ratio": "^0.2.0",
