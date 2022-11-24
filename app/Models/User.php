@@ -29,12 +29,12 @@ final class User extends Authenticatable implements MustVerifyEmail
     const ADMIN = 3;
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
-    protected $table = 'users';
+    protected $table = self::TABLE;
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     protected $fillable = [
         'name',
@@ -49,10 +49,11 @@ final class User extends Authenticatable implements MustVerifyEmail
         'type',
         'remember_token',
         'bio',
+        'banned_reason',
     ];
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     protected $hidden = ['password', 'remember_token'];
 
@@ -109,6 +110,11 @@ final class User extends Authenticatable implements MustVerifyEmail
     public function isBanned(): bool
     {
         return ! is_null($this->banned_at);
+    }
+
+    public function bannedReason(): ?string
+    {
+        return $this->banned_reason;
     }
 
     public function type(): int
